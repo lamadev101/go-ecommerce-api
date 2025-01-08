@@ -27,6 +27,9 @@ type Manager interface {
 	UpdateEmailVerifiedStatus(types.UserVerification, string) error
 	GetSingleRecordByEmailForUser(string, string) types.User
 	UpdateByEmail(string, string, string) error
+	GetListProducts(int, int, int, string) ([]types.Product, int64, error)
+	CheckSlugOnDocument(string, string) error
+	GetProductBySlug(string, string) (types.Product, error)
 }
 
 func ConnectDb() {

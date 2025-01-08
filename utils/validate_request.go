@@ -31,3 +31,22 @@ func ChangePasswordValidation(password types.ChangePassword) error {
 	}
 	return nil
 }
+
+func ProductRequestValidation(product types.ProductClient) error {
+	if product.Name == "" {
+		return errors.New("product name must be at least 3 characters long")
+	}
+	if product.Description == "" {
+		return errors.New("description can't be empty")
+	}
+	if product.Price <= 0 {
+		return errors.New("price must be greater than 0")
+	}
+	if product.ImageURL == "" {
+		return errors.New("image URL can't be empty")
+	}
+	if product.Stock < 0 {
+		return errors.New("stock can't be negative")
+	}
+	return nil
+}

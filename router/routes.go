@@ -20,3 +20,12 @@ var userRoutes = Routes{
 	Route{"Change Password", http.MethodPut, constant.CHANGE_PASSWORD_ROUTE, controller.ChangePassword},
 	Route{"Reset Password", http.MethodPut, constant.RESET_PASSWORD_ROUTE, controller.ResetPassword},
 }
+
+var productRoutes = Routes{
+	Route{"Create Product", http.MethodPost, constant.CREATE_PRODUCT, controller.CreateProduct},
+}
+
+var productGlobalRoutes = Routes{
+	Route{"List Product", http.MethodGet, constant.PRODUCTS_ROUTE, controller.ListProduct},
+	Route{"Get Product By Slug", http.MethodGet, constant.PRODUCT_ROUTE, controller.GetProductBySlug},
+}

@@ -3,10 +3,12 @@ package database
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/lamadev101/ecommerce-api/constant"
 	"github.com/lamadev101/ecommerce-api/types"
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
 func (mgr *manager) Insert(document interface{}, collectionName string) (interface{}, error) {
@@ -71,4 +73,51 @@ func (mgr *manager) GetSingleRecordByEmailForUser(email, collectionName string) 
 
 	_ = orgCollection.FindOne(context.TODO(), filter).Decode(&res)
 	return res
+}
+
+// ================ Products ====================
+func (mgr *manager) GetListProducts(page, limit, offset int, collectionName string) (products []types.Product, count int64, err error) {
+	skip := ((page - 1) * limit)
+	if offset > 0 {
+		skip = offset
+	}
+
+	orgCollection := mgr.connection.Database(constant.DATABASE).Collection(collectionName)
+
+	findOptions := options.Find()
+	findOptions.SetSkip(int64(skip))
+	findOptions.SetLimit(int64(limit))
+
+	cur, err := orgCollection.Find(context.TODO(), bson.M{}, findOptions)
+	if err != nil {
+		return nil, 0, err
+	}
+	if err = cur.All(context.TODO(), &products); err != nil {
+		return nil, 0, err
+	}
+
+	itemCount, err := orgCollection.CountDocuments(context.TODO(), bson.M{})
+	return products, itemCount, err
+}
+
+func (mgr *manager) CheckSlugOnDocument(slug string, collectionName string) error {
+	res := &types.Product{}
+	filter := bson.D{{Key: "slug", Value: slug}}
+	orgCollection := mgr.connection.Database(constant.DATABASE).Collection(collectionName)
+
+	err := orgCollection.FindOne(context.TODO(), filter).Decode(&res)
+	return err
+}
+
+func (mgr *manager) GetProductBySlug(slug, collectionName string) (product types.Product, err error) {
+	orgCollection := mgr.connection.Database(constant.DATABASE).Collection(collectionName)
+	filter := bson.M{"slug": slug}
+
+	err = orgCollection.FindOne(context.TODO(), filter).Decode(&product)
+	if err != nil {
+		log.Println("error:", err)
+		return product, nil
+	}
+
+	return product, nil
 }
