@@ -23,6 +23,7 @@ const (
 	USERS_COLLECTION             = "users"
 	ORDER_COLLECTION             = "order"
 	ADDRESS_COLLECTION           = "address"
+	BANNER_COLLECTION            = "banner"
 	PRODUCTS_COLLECTION          = "products"
 	USER_VERIFICATION_COLLECTION = "user_verification"
 )
@@ -47,6 +48,12 @@ const (
 	UPDATE_PRODUCT = "/update-product"
 	DELETE_PRODUCT = "/delete-product"
 
+	// Banner routes
+	BANNER_ROUTE  = "/banners"
+	CREATE_BANNER = "/create-banner"
+	UPDATE_BANNER = "/update-banner"
+	DELETE_BANNER = "/delete-banner"
+
 	// Address routes
 	ADDRESS_ROUTE  = "/address"
 	CREATE_ADDRESS = "/create-address"
@@ -63,6 +70,7 @@ const (
 	OTP_EXPIRED                   = "OTP expired"
 	OTP_ALREADY_SENT              = "OTP already sent to this email"
 	NOT_REGISTERED_USER           = "Your are not registered user"
+	UNAUTHORIZED_USER             = "You are not authorized"
 	CREADENTIAL_DOES_NOT_MATCH    = "Email or Password is incorrect"
 	PREV_PASSWORD_DOES_NOT_MATCH  = "Old password is does not match with previous one"
 	ALREADY_USED_PASSWORD         = "This password is already used. Please try new one"

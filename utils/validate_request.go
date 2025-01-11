@@ -50,3 +50,25 @@ func ProductRequestValidation(product types.ProductClient) error {
 	}
 	return nil
 }
+
+func BannerRequestValidation(banner types.BannerClient) error {
+	if banner.Name == "" {
+		return errors.New("banner name must be at least 3 characters long")
+	}
+	if banner.Description == "" {
+		return errors.New("description can't be empty")
+	}
+	if banner.BtnLabel == "" {
+		return errors.New("btn lable cant be empty")
+	}
+	if banner.BannerImageUrl == "" {
+		return errors.New("banner image URL can't be empty")
+	}
+	if banner.ProductLink == "" {
+		return errors.New("product link can't be empty")
+	}
+	if banner.BannerType == "" {
+		return errors.New("banner type can't be empty")
+	}
+	return nil
+}

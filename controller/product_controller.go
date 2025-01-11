@@ -16,12 +16,12 @@ func CreateProduct(c *gin.Context) {
 	var dbProduct types.Product
 
 	if err := c.ShouldBindJSON(&productReq); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithBadRequestError(c, err.Error())
 		return
 	}
 
 	if err := utils.ProductRequestValidation(productReq); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithBadRequestError(c, err.Error())
 		return
 	}
 
@@ -39,11 +39,10 @@ func CreateProduct(c *gin.Context) {
 
 	_, err := database.Mgr.Insert(dbProduct, constant.PRODUCTS_COLLECTION)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithInternalServerError(c, err.Error())
 		return
 	}
-
-	c.JSON(http.StatusOK, gin.H{"error": false, "message": "Product created successfully!"})
+	utils.RespondWithSuccessMsg(c, "Product created successfully!")
 }
 
 func ListProduct(c *gin.Context) {
@@ -57,7 +56,7 @@ func ListProduct(c *gin.Context) {
 
 	dbResp, count, err := database.Mgr.GetListProducts(pageInt, limitInt, offsetInt, constant.PRODUCTS_COLLECTION)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"err": true, "message": err.Error()})
+		utils.RespondWithInternalServerError(c, err.Error())
 		return
 	}
 
@@ -68,25 +67,19 @@ func GetProductBySlug(c *gin.Context) {
 	productSlug := c.Param("slug")
 
 	if productSlug == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": "slug parameter is required"})
-		return
-	}
-
-	// Check the this slug is available or not on db
-	if err := database.Mgr.CheckSlugOnDocument(productSlug, constant.PRODUCTS_COLLECTION); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": "Requested product not found"})
+		utils.RespondWithBadRequestError(c, "slug parameter is required")
 		return
 	}
 
 	// Fetch the product by slug from the database
 	product, err := database.Mgr.GetProductBySlug(productSlug, constant.PRODUCTS_COLLECTION)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithBadRequestError(c, err.Error())
 		return
 	}
 
 	// Respond with the product data
-	c.JSON(http.StatusOK, gin.H{"error": false, "message": "success", "data": product})
+	utils.RespondWithSuccessData(c, product)
 }
 
 func UpdateProduct(c *gin.Context) {

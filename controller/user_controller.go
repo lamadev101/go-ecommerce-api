@@ -20,12 +20,12 @@ func VerifyEmail(c *gin.Context) {
 	// Verify email
 	var req types.UserVerification
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithBadRequestError(c, err.Error())
 		return
 	}
 
 	if req.Email == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": constant.EMAIL_VALIDATION_FAILED})
+		utils.RespondWithBadRequestError(c, constant.EMAIL_VALIDATION_FAILED)
 		return
 	}
 	res := database.Mgr.GetUserByEmail(req.Email, constant.USER_VERIFICATION_COLLECTION)
@@ -38,16 +38,16 @@ func VerifyEmail(c *gin.Context) {
 		if sec < time.Now().Unix() {
 			req, checkEmail := utils.SendEmail(req)
 			if checkEmail != nil {
-				c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": checkEmail.Error()})
+				utils.RespondWithBadRequestError(c, checkEmail.Error())
 				return
 			}
 			req.CreatedAt = time.Now().Unix()
 			// update the OTP in the database
 			database.Mgr.UpateUserOTP(req, constant.USER_VERIFICATION_COLLECTION)
-			c.JSON(http.StatusOK, gin.H{"error": false, "message": "OTP sent successfully !!"})
+			utils.RespondWithSuccessMsg(c, "OTP sent successfully")
 			return
 		} else {
-			c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": constant.OTP_ALREADY_SENT})
+			utils.RespondWithBadRequestError(c, constant.OTP_ALREADY_SENT)
 			return
 		}
 	}
@@ -55,7 +55,7 @@ func VerifyEmail(c *gin.Context) {
 	req, checkEmail := utils.SendEmail(req)
 
 	if checkEmail != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": checkEmail.Error()})
+		utils.RespondWithBadRequestError(c, checkEmail.Error())
 		return
 	}
 
@@ -63,45 +63,45 @@ func VerifyEmail(c *gin.Context) {
 	// insert the OTP in the database
 	_, err := database.Mgr.Insert(req, constant.USER_VERIFICATION_COLLECTION)
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithBadRequestError(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"error": false, "message": "OTP sent successfully -:)"})
+	utils.RespondWithSuccessMsg(c, "OTP sent successfully")
 }
 
 func VerifyOtp(c *gin.Context) {
 	var req types.UserVerification
 
 	if err := c.ShouldBindJSON(&req); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithBadRequestError(c, err.Error())
 		return
 	}
 
 	if req.Email == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": constant.EMAIL_VALIDATION_FAILED})
+		utils.RespondWithBadRequestError(c, constant.EMAIL_VALIDATION_FAILED)
 		return
 	}
 	if req.Otp <= 0 {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": constant.OTP_VALIDATION_FAILED})
+		utils.RespondWithBadRequestError(c, constant.OTP_VALIDATION_FAILED)
 		return
 	}
 
 	res := database.Mgr.GetUserByEmail(req.Email, constant.USER_VERIFICATION_COLLECTION)
 	// if status or email is already verified
 	if res.Status {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": "This user is already verified!"})
+		utils.RespondWithBadRequestError(c, "This user is already verified")
 		return
 	}
 
 	sec := res.CreatedAt + constant.OTP_VALIDATION_TIME
 
 	if res.Otp != req.Otp {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": constant.OTP_VALIDATION_FAILED})
+		utils.RespondWithBadRequestError(c, constant.OTP_VALIDATION_FAILED)
 		return
 	}
 	// otp expired
 	if sec < time.Now().Unix() {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": constant.OTP_EXPIRED})
+		utils.RespondWithBadRequestError(c, constant.OTP_EXPIRED)
 		return
 	}
 
@@ -111,10 +111,10 @@ func VerifyOtp(c *gin.Context) {
 	err := database.Mgr.UpdateEmailVerifiedStatus(req, constant.USER_VERIFICATION_COLLECTION)
 
 	if err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": constant.OTP_VALIDATION_FAILED})
+		utils.RespondWithBadRequestError(c, constant.OTP_VALIDATION_FAILED)
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"error": false, "message": "success"})
+	utils.RespondWithSuccessMsg(c, "OTP verified successfully")
 }
 
 func RegisterUser(c *gin.Context) {
@@ -122,25 +122,25 @@ func RegisterUser(c *gin.Context) {
 	var dbUser types.User
 
 	if err := c.ShouldBindJSON(&userReq); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithBadRequestError(c, err.Error())
 		return
 	}
 
 	// payload error handle
 	if err := utils.RegisterUserValidation(userReq); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithBadRequestError(c, err.Error())
 		return
 	}
 
 	// check if email is verified or not
 	if res := database.Mgr.GetUserByEmail(userReq.Email, constant.USER_VERIFICATION_COLLECTION); !res.Status {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": constant.EMAIL_NOT_VERIFIED})
+		utils.RespondWithBadRequestError(c, constant.EMAIL_NOT_VERIFIED)
 		return
 	}
 
 	// Check duplicate user
 	if res := database.Mgr.GetUserByEmail(userReq.Email, constant.USERS_COLLECTION); res.Email != "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": constant.ALREADY_REGISTERED_WITH_EMAIL})
+		utils.RespondWithBadRequestError(c, constant.ALREADY_REGISTERED_WITH_EMAIL)
 		return
 	}
 
@@ -154,7 +154,7 @@ func RegisterUser(c *gin.Context) {
 
 	id, err := database.Mgr.Insert(dbUser, constant.USERS_COLLECTION)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithInternalServerError(c, err.Error())
 		return
 	}
 
@@ -170,7 +170,7 @@ func RegisterUser(c *gin.Context) {
 	// token generation
 	token, err := jwtWrapper.GenerateToken(userId, userReq.Email, dbUser.UserType)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithInternalServerError(c, err.Error())
 		return
 	}
 	dbUser.Password = ""
@@ -187,18 +187,18 @@ func LoginUser(c *gin.Context) {
 	var loginReq types.Login
 
 	if err := c.ShouldBindJSON(&loginReq); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithBadRequestError(c, err.Error())
 		return
 	}
 
 	user := database.Mgr.GetSingleRecordByEmailForUser(loginReq.Email, constant.USERS_COLLECTION)
 	if user.Email == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": constant.NOT_REGISTERED_USER})
+		utils.RespondWithBadRequestError(c, constant.NOT_REGISTERED_USER)
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(loginReq.Password)); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": constant.CREADENTIAL_DOES_NOT_MATCH})
+		utils.RespondWithBadRequestError(c, constant.CREADENTIAL_DOES_NOT_MATCH)
 		return
 	}
 
@@ -210,7 +210,7 @@ func LoginUser(c *gin.Context) {
 
 	token, err := jwtWrapper.GenerateToken(user.Id, user.Email, user.UserType)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithInternalServerError(c, err.Error())
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"token": token})
@@ -220,34 +220,34 @@ func ChangePassword(c *gin.Context) {
 	var changePasswordReq types.ChangePassword
 
 	if err := c.ShouldBindJSON(&changePasswordReq); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithBadRequestError(c, err.Error())
 		return
 	}
 
 	if changePasswordReq.OldPassword == changePasswordReq.NewPassword {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": constant.ALREADY_USED_PASSWORD})
+		utils.RespondWithBadRequestError(c, constant.ALREADY_USED_PASSWORD)
 		return
 	}
 
 	if changePasswordReq.ConfirmPassword != changePasswordReq.NewPassword {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": constant.CONFIRM_PASSOWRD_MATCH})
+		utils.RespondWithBadRequestError(c, constant.CONFIRM_PASSOWRD_MATCH)
 		return
 	}
 
 	user := database.Mgr.GetSingleRecordByEmailForUser(changePasswordReq.Email, constant.USERS_COLLECTION)
 
 	if user.Email == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": constant.EMAIL_NOT_VERIFIED})
+		utils.RespondWithBadRequestError(c, constant.EMAIL_NOT_VERIFIED)
 		return
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(changePasswordReq.OldPassword)); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": constant.PREV_PASSWORD_DOES_NOT_MATCH})
+		utils.RespondWithBadRequestError(c, constant.PREV_PASSWORD_DOES_NOT_MATCH)
 		return
 	}
 
 	if err := utils.ChangePasswordValidation(changePasswordReq); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithBadRequestError(c, err.Error())
 		return
 	}
 
@@ -255,39 +255,39 @@ func ChangePassword(c *gin.Context) {
 	hashPassword := utils.GenerateHashPassword(changePasswordReq.NewPassword)
 
 	if err := database.Mgr.UpdateByEmail(changePasswordReq.Email, hashPassword, constant.USERS_COLLECTION); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithInternalServerError(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"error": false, "message": constant.PASSWORD_CHANGE_SUCCESSFULLY})
+	utils.RespondWithSuccessMsg(c, constant.PASSWORD_CHANGE_SUCCESSFULLY)
 }
 
 func ResetPassword(c *gin.Context) {
 	var resetPasswordReq types.Login
 
 	if err := c.ShouldBindJSON(&resetPasswordReq); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithBadRequestError(c, err.Error())
 		return
 	}
 
 	user := database.Mgr.GetSingleRecordByEmailForUser(resetPasswordReq.Email, constant.USERS_COLLECTION)
 
 	if user.Email == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": constant.EMAIL_NOT_VERIFIED})
+		utils.RespondWithBadRequestError(c, constant.EMAIL_NOT_VERIFIED)
 		return
 	}
 
 	if resetPasswordReq.Password == "" {
-		c.JSON(http.StatusBadRequest, gin.H{"error": true, "message": "Password is required!"})
+		utils.RespondWithBadRequestError(c, "Password is required")
 		return
 	}
 
 	hashPassword := utils.GenerateHashPassword(resetPasswordReq.Password)
 
 	if err := database.Mgr.UpdateByEmail(resetPasswordReq.Email, hashPassword, constant.USERS_COLLECTION); err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": true, "message": err.Error()})
+		utils.RespondWithInternalServerError(c, err.Error())
 		return
 	}
-	c.JSON(http.StatusOK, gin.H{"error": false, "message": constant.PASSWORD_RESET_SUCCESSFULLY})
+	utils.RespondWithSuccessMsg(c, constant.PASSWORD_RESET_SUCCESSFULLY)
 }
 
 func TwoFactorVerification(c *gin.Context) {

@@ -21,11 +21,12 @@ var userRoutes = Routes{
 	Route{"Reset Password", http.MethodPut, constant.RESET_PASSWORD_ROUTE, controller.ResetPassword},
 }
 
-var productRoutes = Routes{
+var ecommerceRoutes = Routes{
 	Route{"Create Product", http.MethodPost, constant.CREATE_PRODUCT, controller.CreateProduct},
+	Route{"Create Banner", http.MethodPost, constant.CREATE_BANNER, controller.CreateBanner},
 }
 
-var productGlobalRoutes = Routes{
+var ecommerceGlobalRoutes = Routes{
 	Route{"List Product", http.MethodGet, constant.PRODUCTS_ROUTE, controller.ListProduct},
 	Route{"Get Product By Slug", http.MethodGet, constant.PRODUCT_ROUTE, controller.GetProductBySlug},
 }
